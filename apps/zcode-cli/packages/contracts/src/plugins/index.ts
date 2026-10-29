@@ -101,6 +101,11 @@ export interface PluginComponentItem {
   name: string;
   /** 来自组件 frontmatter / manifest 的描述；缺失时省略，绝不伪造。 */
   description?: string;
+  /**
+   * 目录枚举到的组件源文件路径。frontmatter name 与文件名不一致时消费方不能按 name
+   * 反推路径（agents/Company Researcher.md 不存在），必须使用该字段定位源文件。
+   */
+  filePath?: string;
 }
 
 export interface PluginComponentGroup {

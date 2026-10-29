@@ -875,6 +875,57 @@ describe("NodePluginAdapter", () => {
     }
   });
 
+  it("enumerates agent components with their source filePath, including manifest-declared dirs", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "zcode-plugin-agent-filepath-"));
+    const pluginRoot = join(dir, "agents-plugin");
+
+    try {
+      await writePluginManifest(pluginRoot, { agents: "my-agents", name: "agents-dev" });
+      await mkdir(join(pluginRoot, "my-agents"), { recursive: true });
+      await mkdir(join(pluginRoot, "agents"), { recursive: true });
+      // frontmatter name 与文件名一致与不一致两种情况都必须携带真实源文件路径，
+      // 消费方（subagents 加载器）不能再按 name 反推路径。
+      await writeFile(
+        join(pluginRoot, "my-agents", "company-researcher.md"),
+        "---\nname: Company Researcher\ndescription: Research a company\n---\nPrompt",
+      );
+      await writeFile(
+        join(pluginRoot, "agents", "code-architect.md"),
+        "---\nname: code-architect\ndescription: Architect\n---\nPrompt",
+      );
+
+      const outcome = await createNodePluginAdapter({
+        storageRoot: join(dir, "plugins"),
+      }).discoverPlugins({
+        config: {
+          dirs: [pluginRoot],
+          enabled: true,
+          enabledPlugins: {},
+          options: {},
+        },
+        env: {},
+        storageRoot: join(dir, "plugins"),
+        workingDirectory: join(dir, "workspace"),
+      });
+
+      const agentItems =
+        outcome.plugins[0]?.components.find((group) => group.kind === "agent")?.items ?? [];
+      expect(agentItems).toHaveLength(2);
+      expect(agentItems).toContainEqual({
+        description: "Research a company",
+        filePath: join(pluginRoot, "my-agents", "company-researcher.md"),
+        name: "Company Researcher",
+      });
+      expect(agentItems).toContainEqual({
+        description: "Architect",
+        filePath: join(pluginRoot, "agents", "code-architect.md"),
+        name: "code-architect",
+      });
+    } finally {
+      await rm(dir, { force: true, recursive: true });
+    }
+  });
+
   it("loads representative Claude marketplace plugin layouts for skills, commands, and MCP servers", async () => {
     const dir = await mkdtemp(join(tmpdir(), "zcode-plugin-triplet-marketplace-"));
     const storageRoot = join(dir, "storage");

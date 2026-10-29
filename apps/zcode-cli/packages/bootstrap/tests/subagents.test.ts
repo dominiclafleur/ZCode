@@ -30,6 +30,43 @@ function pluginMetadata(input: { enabled?: boolean; id: string; name: string; ro
   };
 }
 
+describe("loadPluginAgentTemplates", () => {
+  it("frontmatter name 与文件名不一致时经 filePath 定位源文件，缺省时保持旧反推行为", async () => {
+    const root = await mkdtemp(join(tmpdir(), "zcode-plugin-agent-path-"));
+    try {
+      const pluginRoot = join(root, "plugin");
+      await mkdir(join(pluginRoot, "agents"), { recursive: true });
+      const agentFile = join(pluginRoot, "agents", "company-researcher.md");
+      await writeFile(
+        agentFile,
+        "---\nname: Company Researcher\ndescription: Research a company\n---\nPrompt",
+      );
+      const base = pluginMetadata({ id: "fixture@personal", name: "fixture", rootPath: pluginRoot });
+      const withFilePath = {
+        ...base,
+        components: [
+          { kind: "agent" as const, items: [{ name: "Company Researcher", filePath: agentFile }] },
+        ],
+      };
+      const legacyItem = {
+        ...base,
+        components: [{ kind: "agent" as const, items: [{ name: "Company Researcher" }] }],
+      };
+
+      const fixed = loadPluginAgentTemplates({ plugins: [withFilePath] });
+      expect(fixed.profiles).toHaveLength(1);
+      expect(fixed.profiles[0]?.bareName).toBe("Company Researcher");
+
+      // 旧枚举结果（无 filePath）沿用按 name 反推的路径，找不到文件时只产出诊断。
+      const legacy = loadPluginAgentTemplates({ plugins: [legacyItem] });
+      expect(legacy.profiles).toHaveLength(0);
+      expect(legacy.diagnostics.length).toBeGreaterThan(0);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+});
+
 describe("loadZCodeAgentProfiles", () => {
   it("一次读取迁移后的插件覆盖注入规范名和别名，不修改插件文件或串用另一插件覆盖", async () => {
     const root = await mkdtemp(join(tmpdir(), "zcode-plugin-selection-"));

@@ -83,11 +83,16 @@ function collectMarkdownComponents(
     }
     for (const fileName of entries) {
       const baseName = fileName.slice(0, -".md".length);
-      const fm = readMarkdownFrontmatter(join(dir, fileName));
+      const filePath = join(dir, fileName);
+      const fm = readMarkdownFrontmatter(filePath);
       const name = fm.name ?? baseName;
       if (seen.has(name)) continue;
       seen.add(name);
-      items.push(fm.description ? { name, description: fm.description } : { name });
+      items.push({
+        name,
+        ...(fm.description ? { description: fm.description } : {}),
+        filePath,
+      });
     }
   }
   return items;

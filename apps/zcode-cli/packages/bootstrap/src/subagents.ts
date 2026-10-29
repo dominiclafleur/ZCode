@@ -115,7 +115,8 @@ export function loadPluginAgentTemplates(
     if (!plugin.enabled) continue;
     const agents = plugin.components.find((group) => group.kind === "agent")?.items ?? [];
     for (const agent of agents) {
-      const filePath = join(plugin.rootPath, "agents", `${agent.name}.md`);
+      // frontmatter name 可与文件名不同；枚举结果已携带源文件路径，仅缺省时按旧规则反推。
+      const filePath = agent.filePath ?? join(plugin.rootPath, "agents", `${agent.name}.md`);
       const result = parsePluginAgentProfile({ filePath, logger: input.logger, plugin });
       if (result.diagnostic) diagnostics.push(result.diagnostic);
       if (result.parsed) parsedProfiles.push(result.parsed);
