@@ -37,6 +37,7 @@ export class ToolExecutorImpl implements ToolExecutor {
       enqueueBackgroundTaskNotification: options.enqueueBackgroundTaskNotification,
       shouldEnqueueBackgroundTaskNotification: options.shouldEnqueueBackgroundTaskNotification,
       sessionId: options.sessionId,
+      hookActor: options.hookActor,
       turnId: options.turnId,
       defaultTimeoutMs: options.defaultTimeoutMs ?? 300000,
       permissionTimeoutMs: options.permissionTimeoutMs,

@@ -293,6 +293,10 @@ export function createDefaultSubagentPort(
             bashTimeoutPolicy: this.config.bashTimeoutPolicy,
             midConversationSystem: this.config.midConversationSystem,
             toolSearch: this.config.toolSearch,
+            // Bug 根因：child 配置逐字段构造时漏掉 hooks，子代理内的工具调用从不触发
+            // PreToolUse / PermissionRequest / PostToolUse(Failure)，安全类 Hook 被整体绕过。
+            // 继承父配置后只补工具级 Hook；会话级 Hook 在 child 内跳过，见 runtime/methods/hooks.ts。
+            hooks: this.config.hooks,
             bashShellSelection,
             // child 只复用父 runtime 已解析的 instructions snapshot；Project Context 仍不继承。
             currentDate: this.contextSourceSnapshot?.currentDate ?? this.config.currentDate,
@@ -362,6 +366,9 @@ export function createDefaultSubagentPort(
               : this.permissionService,
             toolScheduler: deps.toolScheduler ?? defaultScheduler,
             executionPort: deps.executionPort,
+            // 项目级 Hook 与父共用同一 admission 实例：子代理派发同样经过 admission 评估。
+            workspaceHookAdmission: deps.workspaceHookAdmission,
+            workspaceHookSnapshot: deps.workspaceHookSnapshot,
             fileSystemPort: deps.fileSystemPort,
             // Explore 子运行时会暴露 WebFetch，但之前没有继承主 runtime 的
             // HTTP client port，导致工具在真正发请求前抛出配置错误，而不是网络请求失败。

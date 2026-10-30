@@ -21,6 +21,8 @@ export async function createCompatibleHookStdin(input: HookInput): Promise<{
     hook_event_name: input.hookEventName,
     permission_mode: input.mode,
     session_id: input.sessionId,
+    // 子代理 Hook 的 session_id 是 child 会话；附带父会话 ID，Hook 才能把调用归属回用户可见的任务。
+    ...(input.parentSessionId ? { parent_session_id: input.parentSessionId } : {}),
   };
   const tempDir = await mkdtemp(join(tmpdir(), "zcode-hook-"));
   const transcriptPath = join(tempDir, "transcript.jsonl");

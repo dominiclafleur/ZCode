@@ -69,6 +69,8 @@ export interface BaseHookInput {
   cwd: string;
   hookEventName: HookEventName;
   mode: CollaborationMode;
+  /** 子代理内触发的 Hook 携带父会话 ID；主会话省略。 */
+  parentSessionId?: SessionId;
   sessionId: SessionId;
   timestamp: string;
   traceId: TraceId;

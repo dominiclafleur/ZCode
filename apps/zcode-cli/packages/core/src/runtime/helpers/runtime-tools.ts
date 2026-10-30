@@ -225,6 +225,14 @@ function createRuntimeToolExecutor(
     runtimeScope: runtime.config.taskType === "subagent_child" ? "subagent" : "main",
     permissionTimeoutMs: runtime.config.permissionTimeoutMs,
     sessionId: runtime.sessionId,
+    ...(runtime.config.taskType === "subagent_child" && runtime.config.parentSessionId
+      ? {
+          hookActor: {
+            agentName: runtime.config.agentName,
+            parentSessionId: runtime.config.parentSessionId,
+          },
+        }
+      : {}),
     traceContext: runtime.rootTraceContext,
     getMode: () => runtime.config.mode ?? "build",
     maxConcurrency: runtime.config.toolConcurrency?.maxConcurrency,

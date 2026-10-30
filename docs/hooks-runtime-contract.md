@@ -130,6 +130,18 @@ snake_case 字段。
 - `permission_mode`
 - `hook_event_name`
 - `agent_type`（存在时）
+- `parent_session_id`（仅子代理内触发时）
+
+子代理（Agent 工具派生的 `subagent_child` runtime）：
+
+- 继承父会话的 Hook 配置与项目级 Hook 快照，项目级 Hook 与父共用同一 admission 实例，
+  子代理派发同样经过 admission 评估。
+- 只触发工具级事件：`PreToolUse`、`PermissionRequest`、`PostToolUse`、`PostToolUseFailure`。
+  `session_id` 为 child 会话，`agent_type` 为子代理名（如 `zcode-general-purpose`），
+  `parent_session_id` 为父会话。
+- 不触发 `SessionStart`、`UserPromptSubmit`、`Stop`：这些属于用户可见的主会话，child 内触发会让
+  父会话的 Stop Hook 对每个子代理重复执行。子代理结束事件需单独的 `SubagentStop`（未实现）。
+- 主会话的 Hook 输入不变，不出现 `parent_session_id`。
 
 事件字段：
 
@@ -246,6 +258,7 @@ Hooks 设置页必须在 desktop 和 Web UI 使用同一组件，并满足：
 | HK-08 | Config/source        | user+project+plugin 顺序、逐 Hook disabled 真跳过                                 | adapter/bootstrap/core   |
 | HK-09 | Settings             | `.zcode` 可写、legacy 可导入、plugin 只读可见                                     | service/UI + desktop E2E |
 | HK-10 | Executors/async      | process argv、command shell/fire-and-forget、父级取消、后台 lifecycle、错误隔离   | core + desktop E2E       |
+| HK-11 | Subagent             | 子代理工具调用触发工具级 Hook、携带 `parent_session_id`；会话级 Hook 仅主会话触发 | core                     |
 
 完整窗口级 suite 使用 `HK-LC-01`、`HK-EF-01`、`HK-ST-01`、`HK-UP-01`，定义在
 `docs/testing/hooks-e2e-coverage-matrix.md`。其中父级取消保留在 core 的确定性 AbortSignal

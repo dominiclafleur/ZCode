@@ -84,6 +84,8 @@ export interface ToolExecutorOptions {
   enqueueBackgroundTaskNotification?: EnqueueBackgroundTaskNotification;
   shouldEnqueueBackgroundTaskNotification?: ShouldEnqueueBackgroundTaskNotification;
   sessionId: SessionId;
+  /** 子代理 runtime 的工具 Hook 身份；主会话省略，保持原有 Hook 输入不变。 */
+  hookActor?: { agentName?: string; parentSessionId: SessionId };
   turnId?: TurnId;
   defaultTimeoutMs?: number;
   permissionTimeoutMs?: number;
@@ -199,6 +201,8 @@ export interface ToolExecutorDeps {
   enqueueBackgroundTaskNotification?: EnqueueBackgroundTaskNotification;
   shouldEnqueueBackgroundTaskNotification?: ShouldEnqueueBackgroundTaskNotification;
   sessionId: SessionId;
+  /** 子代理 runtime 的工具 Hook 身份；主会话省略，保持原有 Hook 输入不变。 */
+  hookActor?: { agentName?: string; parentSessionId: SessionId };
   turnId?: TurnId;
   defaultTimeoutMs: number;
   permissionTimeoutMs?: number;

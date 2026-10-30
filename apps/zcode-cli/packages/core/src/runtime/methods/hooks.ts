@@ -17,6 +17,13 @@ const HOOK_PREVIEW_MAX_CHARS = 4_000;
 
 type SessionStartSource = "startup" | "resume" | "clear" | "compact";
 
+// 子代理继承父 Hook 配置只为补齐工具级事件。SessionStart / UserPromptSubmit / Stop 属于用户可见的
+// 主会话：在 child 内触发会让每个子代理重复执行父会话的 Stop Hook（block 还会让子代理续跑），
+// 并对共享的 workspace hook admission 重复 activate，因此 child 内跳过。
+function isSubagentChildRuntime(runtime: AgentRuntimeInternal): boolean {
+  return runtime.config.taskType === "subagent_child";
+}
+
 export async function runSessionStartHooks(
   this: AgentRuntimeInternal,
   source: SessionStartSource,
@@ -24,7 +31,7 @@ export async function runSessionStartHooks(
   signal?: AbortSignal,
   model?: Pick<Model, "providerId" | "modelId">,
 ): Promise<HookRunResult> {
-  if (this.sessionStartHookRan) return EMPTY_HOOK_RESULT;
+  if (this.sessionStartHookRan || isSubagentChildRuntime(this)) return EMPTY_HOOK_RESULT;
   await this.workspaceHookAdmission?.activate(source, signal);
   this.sessionStartHookRan = true;
   if (!this.hookRunner) return EMPTY_HOOK_RESULT;
@@ -54,7 +61,7 @@ export async function runUserPromptSubmitHooks(
   traceContext: TraceContext,
   signal?: AbortSignal,
 ): Promise<HookRunResult> {
-  if (!this.hookRunner) return EMPTY_HOOK_RESULT;
+  if (!this.hookRunner || isSubagentChildRuntime(this)) return EMPTY_HOOK_RESULT;
 
   return this.hookRunner.run(
     {
@@ -81,7 +88,7 @@ export async function runStopHooks(
   signal?: AbortSignal,
   stopHookActive = false,
 ): Promise<HookRunResult> {
-  if (!this.hookRunner) return EMPTY_HOOK_RESULT;
+  if (!this.hookRunner || isSubagentChildRuntime(this)) return EMPTY_HOOK_RESULT;
   const responsePreview = truncateForHook(response, HOOK_PREVIEW_MAX_CHARS);
 
   return this.hookRunner.run(
