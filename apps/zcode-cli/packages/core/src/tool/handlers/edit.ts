@@ -193,7 +193,7 @@ export const editHandler: ToolHandler = async (input, context) => {
   if (filePath.endsWith(".ipynb")) {
     return editFailure(
       EditErrorCode.NOTEBOOK_FILE,
-      "File is a Jupyter Notebook. Use the NotebookEdit to edit this file.",
+      "File is a Jupyter Notebook. Edit does not support notebooks.",
     );
   }
 

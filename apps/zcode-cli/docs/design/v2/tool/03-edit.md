@@ -73,7 +73,7 @@
 7. 通过 `FileSystemPort.readTextFile` 读取文件 bytes，由 adapter 按 BOM、UTF-8 校验和 legacy 中文编码检测推断文本编码，并返回 LF 规范化后的 Unicode 逻辑内容、原始 `encoding` 和 `lineEndings` metadata。
 8. 当前 ZCode 拒绝空 `old_string`，避免对既有文件产生隐式插入；创建新文件或完整重写使用 `Write`。
 9. 不存在文件且 `old_string` 为空时创建文件的行为，ZCode 暂不暴露；后续如需支持必须先更新 `Write/Edit` 边界和测试。
-10. `.ipynb` 文件拒绝，要求用 Notebook edit 工具。
+10. `.ipynb` 文件拒绝，文案不指向具体替代工具（运行时未注册 Notebook edit 工具；Bash/Write 各有原子性与刷新检查差异，由模型自行判断）。
 11. 已存在文件必须此前完整 `Read`。
 12. mtime 变更时，如果完整读缓存内容仍相同，可继续；否则拒绝 stale edit。
 13. 先用 exact，再用 quote normalization 和受限兼容 matcher 查找实际字符串。

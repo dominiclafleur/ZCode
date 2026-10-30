@@ -404,7 +404,7 @@ describe("Edit tool contract", () => {
     });
   });
 
-  it("rejects notebooks in favor of NotebookEdit", async () => {
+  it("rejects notebooks without naming a replacement tool", async () => {
     const file = join(tmpDir, "notebook.ipynb");
     const fs = createMemoryFileSystem({ [file]: '{"cells":[]}' });
     const context = contextWith(fs, { readFileState: createReadFileState(file, '{"cells":[]}') });
@@ -414,7 +414,8 @@ describe("Edit tool contract", () => {
     ).resolves.toMatchObject({
       result: false,
       errorCode: 5,
-      message: "File is a Jupyter Notebook. Use the NotebookEdit to edit this file.",
+      message:
+        "File is a Jupyter Notebook. Edit does not support notebooks.",
     });
   });
 
