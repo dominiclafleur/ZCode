@@ -108,6 +108,8 @@ export function ConversationUserInputBody({
       <div
         ref={contentRef}
         data-v4-user-input-collapsible-content="true"
+        // RTL 修复：按正文首个强方向字符决定对齐，阿拉伯语/希伯来语输入不再固定左对齐。
+        dir="auto"
         style={{ maxHeight: resolvedMaxHeight }}
         className={cn(
           "min-w-0 overflow-hidden whitespace-pre-wrap break-words transition-[max-height] duration-300 ease-out motion-reduce:transition-none",

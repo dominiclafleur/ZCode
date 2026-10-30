@@ -17,7 +17,8 @@ export function MarkdownUnorderedList({
   return (
     <ul
       className={cn(
-        "my-3 list-outside list-disc space-y-1.5 pl-5 marker:text-foreground-subtlest",
+        // list-outside 的 marker 在列表起始侧；用 ps-5 让 RTL 列表的缩进跟随方向，避免 marker 被裁剪。
+        "my-3 list-outside list-disc space-y-1.5 ps-5 marker:text-foreground-subtlest",
         "[&_ul]:my-1.5 [&_ol]:my-1.5",
         className,
       )}
@@ -56,7 +57,7 @@ export type MarkdownListItemProps = ComponentProps<"li"> & MarkdownListNodeProp;
 export function MarkdownListItem({ className, node: _node, ...props }: MarkdownListItemProps) {
   return (
     <li
-      className={cn("pl-1 [&>p]:my-0 [&>p]:inline", className)}
+      className={cn("ps-1 [&>p]:my-0 [&>p]:inline", className)}
       data-streamdown="list-item"
       {...props}
     />

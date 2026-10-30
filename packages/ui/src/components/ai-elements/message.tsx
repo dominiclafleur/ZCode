@@ -53,6 +53,8 @@ import {
   MarkdownListItem,
   MarkdownOrderedList,
   MarkdownUnorderedList,
+  type MarkdownOrderedListProps,
+  type MarkdownUnorderedListProps,
 } from "@/components/ai-elements/markdown-list.js";
 import {
   MarkdownTable,
@@ -61,6 +63,8 @@ import {
   MarkdownTableHead,
   MarkdownTableHeader,
   MarkdownTableRow,
+  type MarkdownTableCellProps,
+  type MarkdownTableHeadProps,
 } from "@/components/ai-elements/markdown-table.js";
 import {
   MarkdownImage,
@@ -1295,6 +1299,7 @@ export const messageResponsePropsAreEqual = (
   nextProps: Readonly<MessageResponseProps>,
 ): boolean =>
   prevProps.children === nextProps.children &&
+  prevProps.dir === nextProps.dir &&
   prevProps.forceCodeWrap === nextProps.forceCodeWrap &&
   nextProps.streaming === prevProps.streaming &&
   nextProps.streamingAnimationKey === prevProps.streamingAnimationKey &&
@@ -1314,6 +1319,7 @@ export const messageResponsePropsAreEqual = (
 export const MessageResponse = memo(
   ({
     className,
+    dir = "auto",
     streaming = false,
     forceCodeWrap = false,
     onOpenCodeViewer,
@@ -1409,10 +1415,13 @@ export const MessageResponse = memo(
           workspaceIdentity,
           workspaceRemoteSessionId,
           wrapLongLines,
-        }) + (forceCodeWrap ? ":wrap-locked" : "")
+        }) +
+        (forceCodeWrap ? ":wrap-locked" : "") +
+        (dir === "auto" ? "" : `:dir-${dir}`)
       );
     }, [
       codeBlockTheme,
+      dir,
       codePreviewSettings.fontSizePx,
       wrapLongLines,
       forceCodeWrap,
@@ -1507,24 +1516,30 @@ export const MessageResponse = memo(
             readAttachment={readAttachment}
           />
         ),
-        p: MarkdownImageParagraph,
+        // RTL 修复：dir prop 之前只声明未使用，阿拉伯语/希伯来语正文一律按 LTR 左对齐。
+        // 文本块逐个带 dir（缺省 auto），由浏览器 first-strong 算法按块判断，混合方向消息
+        // 每段各自对齐。不用 Streamdown 自带 dir：static 模式只按整条消息在根节点算一次，
+        // 与 streaming 的逐块结果不一致。li 不带 dir，否则 ul/ol 的 auto 检测会跳过全部文字。
+        p: (paragraphProps: ComponentProps<"p"> & { node?: unknown }) => (
+          <MarkdownImageParagraph dir={dir} {...paragraphProps} />
+        ),
         h1: (headingProps: MarkdownHeadingProps) => (
-          <MessageMarkdownHeading {...headingProps} headingLevel="h1" />
+          <MessageMarkdownHeading dir={dir} {...headingProps} headingLevel="h1" />
         ),
         h2: (headingProps: MarkdownHeadingProps) => (
-          <MessageMarkdownHeading {...headingProps} headingLevel="h2" />
+          <MessageMarkdownHeading dir={dir} {...headingProps} headingLevel="h2" />
         ),
         h3: (headingProps: MarkdownHeadingProps) => (
-          <MessageMarkdownHeading {...headingProps} headingLevel="h3" />
+          <MessageMarkdownHeading dir={dir} {...headingProps} headingLevel="h3" />
         ),
         h4: (headingProps: MarkdownHeadingProps) => (
-          <MessageMarkdownHeading {...headingProps} headingLevel="h4" />
+          <MessageMarkdownHeading dir={dir} {...headingProps} headingLevel="h4" />
         ),
         h5: (headingProps: MarkdownHeadingProps) => (
-          <MessageMarkdownHeading {...headingProps} headingLevel="h5" />
+          <MessageMarkdownHeading dir={dir} {...headingProps} headingLevel="h5" />
         ),
         h6: (headingProps: MarkdownHeadingProps) => (
-          <MessageMarkdownHeading {...headingProps} headingLevel="h6" />
+          <MessageMarkdownHeading dir={dir} {...headingProps} headingLevel="h6" />
         ),
         strong: ({
           className: strongClassName,
@@ -1548,6 +1563,8 @@ export const MessageResponse = memo(
                   "rounded-md bg-markdown-inline-code/50 mx-0.5 px-1.5 py-0.5 font-mono text-ui-sm",
                   codeClassName,
                 )}
+                // 代码固定 LTR；dir 属性同时提供 bidi 隔离，RTL 段落里的 `foo()` 不会被重排。
+                dir="ltr"
                 {...codeProps}
               >
                 {children}
@@ -1562,6 +1579,7 @@ export const MessageResponse = memo(
             <CodeBlock
               className="my-4 border border-border bg-card"
               code={codeText}
+              dir="ltr"
               // 流式消息里的代码围栏会被 Streamdown 反复拆分/重挂载。
               // 高亮等消息完成后再启动，避免 async highlighter 和消息流更新叠加触发 React #185。
               enableSyntaxHighlighting={!renderStreaming}
@@ -1582,18 +1600,23 @@ export const MessageResponse = memo(
         },
         blockquote: MarkdownBlockquote,
         li: MarkdownListItem,
-        ol: MarkdownOrderedList,
+        ol: (listProps: MarkdownOrderedListProps) => (
+          <MarkdownOrderedList dir={dir} {...listProps} />
+        ),
         table: MarkdownTable,
         tbody: MarkdownTableBody,
-        td: MarkdownTableCell,
-        th: MarkdownTableHead,
+        td: (cellProps: MarkdownTableCellProps) => <MarkdownTableCell dir={dir} {...cellProps} />,
+        th: (cellProps: MarkdownTableHeadProps) => <MarkdownTableHead dir={dir} {...cellProps} />,
         thead: MarkdownTableHeader,
         tr: MarkdownTableRow,
-        ul: MarkdownUnorderedList,
+        ul: (listProps: MarkdownUnorderedListProps) => (
+          <MarkdownUnorderedList dir={dir} {...listProps} />
+        ),
       }),
       [
         codeBlockTheme,
         codePreviewSettings.fontSizePx,
+        dir,
         wrapLongLines,
         forceCodeWrap,
         onOpenFileLink,

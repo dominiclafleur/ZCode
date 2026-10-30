@@ -1397,7 +1397,7 @@ export function MarkdownTableHead({ className, node: _node, ...props }: Markdown
   return (
     <th
       className={cn(
-        "border-border border-b px-3 py-2 text-left font-normal text-foreground-subtlest min-w-16 max-w-md whitespace-normal break-words",
+        "border-border border-b px-3 py-2 text-start font-normal text-foreground-subtlest min-w-16 max-w-md whitespace-normal break-words",
         className,
       )}
       {...props}
